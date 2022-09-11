@@ -1,6 +1,8 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { ThrottlerModule } from '@nestjs/throttler';
+import { MongooseModule } from '@nestjs/mongoose';
+
 import { AuthModule } from './auth/auth.module';
 
 @Module(
@@ -9,8 +11,8 @@ import { AuthModule } from './auth/auth.module';
     [
         ConfigModule.forRoot(),
         ThrottlerModule.forRoot({ ttl: 60, limit: 10 }),
-        AuthModule,
+        MongooseModule.forRoot(process.env.MONGO_URI),
+        AuthModule
     ]
-
 })
 export class AppModule {}
