@@ -2,8 +2,8 @@ import { BadRequestException, ConflictException, HttpStatus, Injectable, Unautho
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import * as bcrypt from 'bcrypt';
-import { sign } from 'jsonwebtoken';
-import { Response } from 'express';
+import { sign, verify } from 'jsonwebtoken';
+import { Response, Request } from 'express';
 
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
@@ -65,9 +65,52 @@ export class AuthService
         throw new UnauthorizedException('Please check your login credentials');
     }
 
-    public logout(response: Response)
+    public async logout(request: Request, response: Response)
     {
-        response.cookie('jwt', '', { httpOnly: true, secure: true, sameSite: 'none', maxAge: 0 });
-        return response.status(HttpStatus.OK).json({ message: 'Logged out' });
+        const refreshToken: string = request.cookies['jwt'];
+        if (!refreshToken)
+        {
+            throw new UnauthorizedException('You are not logged in! Please log in to get access.');
+        }
+
+        const account = await this.accountModel.findOne({ refreshToken });
+        if (!account)
+        {
+            response.clearCookie('jwt', { httpOnly: true, sameSite: 'none', secure: true });
+            return response.status(HttpStatus.NO_CONTENT).json({ message: 'You are already logged out' });
+        }
+
+        account.refreshToken = '';
+        await account.save();
+
+        response.clearCookie('jwt', { httpOnly: true, sameSite: 'none', secure: true });
+        return response.status(HttpStatus.NO_CONTENT).json({ message: 'You are already logged out' });
+    }
+
+    public async refresh(request: Request)
+    {
+        const refreshToken: string = request.cookies['jwt'];
+        if (!refreshToken)
+        {
+            throw new UnauthorizedException('You are not logged in! Please log in to get access.');
+        }
+
+        const account = await this.accountModel.findOne({ refreshToken });
+        if (!account)
+        {
+            throw new UnauthorizedException('Invalid Token. Please log in again!');
+        }
+
+        verify(refreshToken, process.env.JWT_REFRESH_KEY, (error, decoded) =>
+        {
+            if (error || account.id !== decoded.id)
+            {
+                throw new UnauthorizedException('Invalid Token. Please log in again!');
+            }
+
+            const accessToken: string = sign({ id: account.id }, process.env.JWT_ACCESS_KEY, { expiresIn: process.env.JWT_ACCESS_EXPIRES_IN });
+
+            return({ accessToken });
+        });
     }
 }

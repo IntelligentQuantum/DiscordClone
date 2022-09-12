@@ -1,5 +1,5 @@
-import { Body, Controller, Get, Post, Res, UseGuards } from '@nestjs/common';
-import { Response } from 'express';
+import { Body, Controller, Get, Post, Req, Res, UseGuards } from '@nestjs/common';
+import { Response, Request } from 'express';
 
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
@@ -28,8 +28,15 @@ export class AuthController
 
     @Get('logout')
     @UseGuards(AuthGuard)
-    public logout(@Res() response: Response)
+    public async logout(@Req() request: Request, @Res() response: Response)
     {
-        return this.authService.logout(response);
+        return this.authService.logout(request, response);
+    }
+
+    @Get('refresh')
+    @UseGuards(AuthGuard)
+    public async refresh(@Req() request: Request)
+    {
+        return this.authService.refresh(request);
     }
 }
