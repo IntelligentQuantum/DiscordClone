@@ -21,14 +21,20 @@ export class AuthService
 
         const emailExists = await this.accountModel.findOne({ email: email.toLowerCase() });
         if (emailExists)
+        {
             throw new ConflictException('Email address already exists');
+        }
 
         const usernameExists = await this.accountModel.findOne({ username: username.toLowerCase() });
         if (usernameExists)
+        {
             throw new ConflictException('Username already exists');
+        }
 
         if (passwordConfirm !== password)
+        {
             throw new BadRequestException('Password does not match');
+        }
 
         const salt = await bcrypt.genSalt(12);
         const hashedPassword = await bcrypt.hash(password, salt);
@@ -45,8 +51,8 @@ export class AuthService
 
         if (account && (await bcrypt.compare(password, account.password)))
         {
-            const accessToken: string = sign({ id: account.id }, process.env.JWT_ACCESS_KEY, { expiresIn: '30s' });
-            const refreshToken: string = sign({ id: account.id }, process.env.JWT_REFRESH_KEY, { expiresIn: '1d' });
+            const accessToken: string = sign({ id: account.id }, process.env.JWT_ACCESS_KEY, { expiresIn: process.env.JWT_ACCESS_EXPIRES_IN });
+            const refreshToken: string = sign({ id: account.id }, process.env.JWT_REFRESH_KEY, { expiresIn: process.env.JWT_REFRESH_EXPIRES_IN });
 
             account.refreshToken = refreshToken;
             await account.save();
@@ -57,5 +63,11 @@ export class AuthService
         }
 
         throw new UnauthorizedException('Please check your login credentials');
+    }
+
+    public logout(response: Response)
+    {
+        response.cookie('jwt', '', { httpOnly: true, secure: true, sameSite: 'none', maxAge: 0 });
+        return response.status(HttpStatus.OK).json({ message: 'Logged out' });
     }
 }
