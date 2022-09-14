@@ -1,0 +1,93 @@
+.login
+{
+    background: url("/images/register.svg") no-repeat;
+    background-size: cover;
+    height: 100vh;
+    width: 100%;
+
+    position: relative;
+
+    &Box
+    {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+
+        min-width: 25%;
+
+        background-color: #36393F;
+        padding: 3rem;
+        border-radius: 0.5rem;
+
+        &Heading
+        {
+            color: #ffffff;
+            font-weight: 700;
+            font-size: 2.5rem;
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+
+        &Form
+        {
+            &Group
+            {
+                display: flex;
+                flex-direction: column;
+            }
+
+            &Input
+            {
+                margin-bottom: 1rem;
+                background-color: #202225;
+                border: none;
+                padding: 1.2rem 1rem;
+                border-radius: 0.3rem;
+                color: #ffffff;
+                font-family: 'Poppins', sans-serif;
+
+                &:focus
+                {
+                    outline: none;
+                }
+            }
+
+            &Label
+            {
+                color: #A0A3A6;
+                font-size: 1.4rem;
+                margin-bottom: 0.5rem;
+                text-transform: uppercase;
+            }
+
+            &Button
+            {
+                background-color: #4752C4;
+                border: none;
+                padding: 1.2rem 1rem;
+                border-radius: 0.3rem;
+                color: #ffffff;
+                font-family: 'Poppins', sans-serif;
+                font-size: 1.4rem;
+                font-weight: 600;
+                cursor: pointer;
+                transition: all 0.3s ease-in-out;
+                width: 100%;
+                margin-bottom: 1rem;
+
+                &:hover
+                {
+                    background-color: #5F73BC;
+                }
+            }
+        }
+
+        &Link
+        {
+            font-size: 1.4rem;
+            display: block;
+            margin-top: 1rem;
+        }
+    }
+}
