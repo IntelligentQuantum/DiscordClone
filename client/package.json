@@ -18,28 +18,28 @@
         "lint:scss:fix": "npm run lint:scss -- --fix"
     },
     "dependencies": {
-        "@reduxjs/toolkit": "^1.8.5",
-        "axios": "^0.27.2",
-        "classnames": "^2.3.2",
+        "@reduxjs/toolkit": "1.8.5",
+        "axios": "0.27.2",
+        "classnames": "2.3.2",
         "next": "12.3.0",
         "react": "18.2.0",
         "react-dom": "18.2.0",
-        "react-icons": "^4.4.0",
-        "react-redux": "^8.0.2",
-        "redux-logger": "^3.0.6",
-        "sass": "^1.54.9",
-        "sharp": "^0.31.0"
+        "react-icons": "4.4.0",
+        "react-redux": "8.0.2",
+        "redux-logger": "3.0.6",
+        "sass": "1.54.9",
+        "sharp": "0.31.0"
     },
     "devDependencies": {
         "@types/node": "18.7.16",
         "@types/react": "18.0.18",
         "@types/react-dom": "18.0.6",
-        "@types/redux-logger": "^3.0.9",
+        "@types/redux-logger": "3.0.9",
         "eslint": "8.23.0",
         "eslint-config-next": "12.3.0",
-        "husky": "^8.0.1",
-        "stylelint": "^14.11.0",
-        "stylelint-config-standard": "^28.0.0",
+        "husky": "8.0.1",
+        "stylelint": "14.11.0",
+        "stylelint-config-standard": "28.0.0",
         "typescript": "4.8.3"
     }
 }
