@@ -2,11 +2,7 @@ import { configureStore, ThunkAction, Action } from '@reduxjs/toolkit';
 import { combineReducers } from 'redux';
 import logger from 'redux-logger';
 
-import headerReducer from '../features/header/header-slice';
-
-const reducers = combineReducers({
-    header: headerReducer
-});
+const reducers = combineReducers({});
 
 export const store = configureStore({
     reducer: reducers,

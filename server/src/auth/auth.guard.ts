@@ -32,7 +32,7 @@ export class AuthGuard implements CanActivate
         }
         else
         {
-            token = request.cookies.jwt;
+            token = request.cookies.accessToken;
         }
 
         if (!token)

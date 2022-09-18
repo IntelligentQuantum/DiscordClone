@@ -15,7 +15,7 @@ export class AuthService
 {
     constructor(@InjectModel(Account.name) private accountModel: Model<AccountDocument>) {}
 
-    public async register(registerDto: RegisterDto): Promise<AccountDocument>
+    public async register(registerDto: RegisterDto, response: Response)
     {
         const { email, username, password, passwordConfirm } = registerDto;
 
@@ -40,7 +40,8 @@ export class AuthService
         const hashedPassword = await bcrypt.hash(password, salt);
 
         const newAccount = new this.accountModel({ email: email.toLowerCase(), username: username.toLowerCase(), password: hashedPassword });
-        return newAccount.save();
+
+        await this.generateAndSetToken(newAccount, response);
     }
 
     public async login(loginDto: LoginDto, response: Response)
@@ -51,15 +52,7 @@ export class AuthService
 
         if (account && (await bcrypt.compare(password, account.password)))
         {
-            const accessToken: string = sign({ id: account.id }, process.env.JWT_ACCESS_KEY, { expiresIn: process.env.JWT_ACCESS_EXPIRES_IN });
-            const refreshToken: string = sign({ id: account.id }, process.env.JWT_REFRESH_KEY, { expiresIn: process.env.JWT_REFRESH_EXPIRES_IN });
-
-            account.refreshToken = refreshToken;
-            await account.save();
-
-            response.cookie('jwt', refreshToken, { httpOnly: true, secure: true, sameSite: 'none', maxAge: 24 * 60 * 60 * 1000 });
-
-            return response.status(HttpStatus.OK).json({ accessToken });
+            await this.generateAndSetToken(account, response);
         }
 
         throw new UnauthorizedException('Please check your login credentials');
@@ -67,7 +60,7 @@ export class AuthService
 
     public async logout(request: Request, response: Response)
     {
-        const refreshToken: string = request.cookies['jwt'];
+        const refreshToken: string = request.cookies['refreshToken'];
         if (!refreshToken)
         {
             throw new UnauthorizedException('You are not logged in! Please log in to get access.');
@@ -76,20 +69,18 @@ export class AuthService
         const account = await this.accountModel.findOne({ refreshToken });
         if (!account)
         {
-            response.clearCookie('jwt', { httpOnly: true, sameSite: 'none', secure: true });
-            return response.status(HttpStatus.NO_CONTENT).json({ message: 'You are already logged out' });
+            this.clearCookies(response);
         }
 
         account.refreshToken = '';
         await account.save();
 
-        response.clearCookie('jwt', { httpOnly: true, sameSite: 'none', secure: true });
-        return response.status(HttpStatus.NO_CONTENT).json({ message: 'You are already logged out' });
+        this.clearCookies(response);
     }
 
     public async refresh(request: Request)
     {
-        const refreshToken: string = request.cookies['jwt'];
+        const refreshToken: string = request.cookies['refreshToken'];
         if (!refreshToken)
         {
             throw new UnauthorizedException('You are not logged in! Please log in to get access.');
@@ -112,5 +103,27 @@ export class AuthService
 
             return({ accessToken });
         });
+    }
+
+    private async generateAndSetToken(account: AccountDocument, response: Response)
+    {
+        const accessToken: string = sign({ id: account.id }, process.env.JWT_ACCESS_KEY, { expiresIn: process.env.JWT_ACCESS_EXPIRES_IN });
+        const refreshToken: string = sign({ id: account.id }, process.env.JWT_REFRESH_KEY, { expiresIn: process.env.JWT_REFRESH_EXPIRES_IN });
+
+        account.refreshToken = refreshToken;
+        await account.save();
+
+        response.cookie('accessToken', accessToken, { httpOnly: true, secure: true, sameSite: 'none', maxAge: +process.env.JWT_ACCESS_COOKIE_MAX_AGE, path: '/' });
+        response.cookie('refreshToken', refreshToken, { httpOnly: true, secure: true, sameSite: 'none', maxAge: +process.env.JWT_REFRESH_COOKIE_MAX_AGE, path: '/' });
+
+        return response.status(HttpStatus.OK).json({ accessToken });
+    }
+
+    private clearCookies(response: Response)
+    {
+        response.clearCookie('refreshToken', { httpOnly: true, sameSite: 'none', secure: true });
+        response.clearCookie('accessToken', { httpOnly: true, sameSite: 'none', secure: true });
+
+        return response.status(HttpStatus.NO_CONTENT).json({ message: 'You are already logged out' });
     }
 }
