@@ -7,7 +7,7 @@ import { RegisterDto } from './dto/register.dto';
 import { AuthGuard } from './auth.guard';
 
 import { AuthService } from './auth.service';
-import { AccountDocument } from './schemas/account.schema';
+import { AccountDecorator } from './account.decorator';
 
 @Controller('auth')
 export class AuthController
@@ -34,9 +34,15 @@ export class AuthController
     }
 
     @Get('refresh')
-    @UseGuards(AuthGuard)
     public async refresh(@Req() request: Request)
     {
         return this.authService.refresh(request);
+    }
+
+    @Get('me')
+    @UseGuards(AuthGuard)
+    public me(@AccountDecorator() accountId: number)
+    {
+        return this.authService.me(accountId);
     }
 }

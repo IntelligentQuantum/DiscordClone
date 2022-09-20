@@ -3,7 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import * as bcrypt from 'bcrypt';
 import { sign, verify } from 'jsonwebtoken';
-import { Response, Request } from 'express';
+import { Request, Response } from 'express';
 
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
@@ -60,7 +60,7 @@ export class AuthService
 
     public async logout(request: Request, response: Response)
     {
-        const refreshToken: string = request.cookies['refreshToken'];
+        const refreshToken: string = request.cookies.refreshToken;
         if (!refreshToken)
         {
             throw new UnauthorizedException('You are not logged in! Please log in to get access.');
@@ -80,7 +80,7 @@ export class AuthService
 
     public async refresh(request: Request)
     {
-        const refreshToken: string = request.cookies['refreshToken'];
+        const refreshToken: string = request.cookies.refreshToken;
         if (!refreshToken)
         {
             throw new UnauthorizedException('You are not logged in! Please log in to get access.');
@@ -92,17 +92,19 @@ export class AuthService
             throw new UnauthorizedException('Invalid Token. Please log in again!');
         }
 
-        verify(refreshToken, process.env.JWT_REFRESH_KEY, (error, decoded) =>
+        const verifyRefreshToken = verify(refreshToken, process.env.JWT_REFRESH_KEY);
+        if (!verifyRefreshToken || !account || account.id !== verifyRefreshToken.id)
         {
-            if (error || account.id !== decoded.id)
-            {
-                throw new UnauthorizedException('Invalid Token. Please log in again!');
-            }
+            throw new UnauthorizedException('Invalid Token. Please log in again!');
+        }
 
-            const accessToken: string = sign({ id: account.id }, process.env.JWT_ACCESS_KEY, { expiresIn: process.env.JWT_ACCESS_EXPIRES_IN });
+        const accessToken: string = sign({ id: account.id }, process.env.JWT_ACCESS_KEY, { expiresIn: process.env.JWT_ACCESS_EXPIRES_IN });
+        return { accessToken };
+    }
 
-            return({ accessToken });
-        });
+    public me(accountId: number)
+    {
+        return this.accountModel.findById(accountId);
     }
 
     private async generateAndSetToken(account: AccountDocument, response: Response)
@@ -113,8 +115,7 @@ export class AuthService
         account.refreshToken = refreshToken;
         await account.save();
 
-        response.cookie('accessToken', accessToken, { httpOnly: true, secure: true, sameSite: 'none', maxAge: +process.env.JWT_ACCESS_COOKIE_MAX_AGE, path: '/' });
-        response.cookie('refreshToken', refreshToken, { httpOnly: true, secure: true, sameSite: 'none', maxAge: +process.env.JWT_REFRESH_COOKIE_MAX_AGE, path: '/' });
+        response.cookie('refreshToken', refreshToken, { httpOnly: true, secure: true, sameSite: 'none', maxAge: +process.env.JWT_REFRESH_COOKIE_MAX_AGE });
 
         return response.status(HttpStatus.OK).json({ accessToken });
     }
@@ -122,8 +123,7 @@ export class AuthService
     private clearCookies(response: Response)
     {
         response.clearCookie('refreshToken', { httpOnly: true, sameSite: 'none', secure: true });
-        response.clearCookie('accessToken', { httpOnly: true, sameSite: 'none', secure: true });
 
-        return response.status(HttpStatus.NO_CONTENT).json({ message: 'You are already logged out' });
+        return response.status(HttpStatus.OK).json({ message: 'You are already logged out' });
     }
 }

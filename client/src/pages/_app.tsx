@@ -4,6 +4,7 @@ import Head from 'next/head';
 import { Provider } from 'react-redux';
 
 import { store } from '../redux/app/store';
+import '../utils/axios.util';
 
 import '../styles/globals.scss';
 

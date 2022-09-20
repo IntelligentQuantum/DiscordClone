@@ -2,6 +2,10 @@ import { ChangeEvent, Fragment, useState } from 'react';
 import type { NextPage } from 'next';
 import Head from 'next/head';
 import Link from 'next/link';
+import axios from 'axios';
+import { useRouter } from 'next/router';
+
+import { useAppDispatch } from '../../redux/app/hooks';
 
 import styles from '../../styles/login.module.scss';
 
@@ -14,15 +18,27 @@ const defaultForm =
 const Login: NextPage = () =>
 {
     const [form, setForm] = useState(defaultForm);
+    const router = useRouter();
 
     const handleChange = (e: ChangeEvent<HTMLInputElement>) =>
     {
         setForm({...form, [e.target.name]: e.target.value});
     }
 
-    const handleSubmit = (e: ChangeEvent<HTMLFormElement>) =>
+    const handleSubmit = async(e: ChangeEvent<HTMLFormElement>) =>
     {
         e.preventDefault();
+
+        try
+        {
+            const { data } = await axios.post('auth/login', form);
+            axios.defaults.headers.common['Authorization'] = `Bearer ${data.accessToken}`;
+            await router.push('/');
+        }
+        catch (exception: any)
+        {
+            console.log(exception);
+        }
     }
 
     return (
@@ -41,6 +57,7 @@ const Login: NextPage = () =>
                                     className={styles.loginBoxFormInput}
                                     type='email'
                                     id='email'
+                                    name='email'
                                     onChange={handleChange}
                                     required
                                 />
@@ -51,6 +68,7 @@ const Login: NextPage = () =>
                                     className={styles.loginBoxFormInput}
                                     type='password'
                                     id='password'
+                                    name='password'
                                     onChange={handleChange}
                                     required
                                 />

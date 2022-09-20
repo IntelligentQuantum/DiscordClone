@@ -13,7 +13,6 @@
         "start": "next start",
         "lint": "next lint",
         "export": "next export",
-        "prepare": "husky install",
         "lint:scss": "stylelint --fix \"src/**/*.scss\" --custom-syntax postcss-scss",
         "lint:scss:fix": "npm run lint:scss -- --fix"
     },
@@ -37,7 +36,6 @@
         "@types/redux-logger": "3.0.9",
         "eslint": "8.23.1",
         "eslint-config-next": "12.3.0",
-        "husky": "8.0.1",
         "stylelint": "14.11.0",
         "stylelint-config-standard": "28.0.0",
         "typescript": "4.8.3"
